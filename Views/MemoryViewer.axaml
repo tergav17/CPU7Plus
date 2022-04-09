@@ -1,0 +1,37 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        x:Class="CPU7Plus.Views.MemoryViewer"
+        Icon="/Assets/centurion-logo.ico"
+        CanResize="False"
+        Width="600"
+        Height="400"
+        Title="Memory Viewer">
+    
+        <Grid Background="LightGray">
+                <Border BorderThickness="1,0,0,0" BorderBrush="#5A000000"/>
+                <Border BorderThickness="0,1,0,0" BorderBrush="#5A000000"/>
+                <Border BorderThickness="0,0,1,0" BorderBrush="#5AFFFFFF"/>
+                <Border BorderThickness="0,0,0,1" BorderBrush="#5AFFFFFF"/>
+                
+                <Canvas>
+                        <TextBox
+                                Name="MemoryInput"
+                                CornerRadius="0"
+                                Width="600"
+                                Height="360"
+                                AcceptsReturn="True"
+                                FontFamily="Consolas"
+                                Padding="1"
+                                KeyDown="OnKeyDown"
+                                IsReadOnly="true">
+                                
+                                Test?
+                                
+                        </TextBox>
+                </Canvas>
+        </Grid>
+        
+</Window>

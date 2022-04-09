@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Avalonia.Threading;
 using CPU7Plus.Views;
+using JetBrains.Annotations;
 
 namespace CPU7Plus.Emulation {
     public class EmulationHandler {
@@ -16,10 +17,11 @@ namespace CPU7Plus.Emulation {
         private EmulationContext _context;
 
         private MainWindow _window;
+        private MemoryViewer _viewer;
 
         private ConcurrentQueue<string> _commandQueue;
 
-        public EmulationHandler(MainWindow window) {
+        public EmulationHandler(MainWindow window, MemoryViewer viewer) {
             // Prepare to create emulation thread
             _run = true;
             _execute = false;
@@ -28,11 +30,16 @@ namespace CPU7Plus.Emulation {
             
             // Save passed objects
             _window = window;
+            _viewer = viewer;
 
             // Create emulator
             _context = new EmulationContext();
             _emulator = new EmulationCore(_context);
-
+            
+            // Set context
+            _viewer.Context = _context;
+            _viewer.UpdateDisplay();
+            
             // Create the thread
             Thread emulationThread = new Thread(new ThreadStart(this.HandleEmulation));
             
@@ -69,6 +76,12 @@ namespace CPU7Plus.Emulation {
             _commandQueue.Enqueue(command);
         }
 
+        [NotNull]
+        public EmulationContext Context {
+            get => _context;
+            set => _context = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
         /**
          * Emulation handler thread
          */
@@ -90,6 +103,7 @@ namespace CPU7Plus.Emulation {
                     
                     Dispatcher.UIThread.Post(() => {
                         ViewUpdater.UpdateView(_context, _window);
+                        _viewer.UpdateDisplay();
                     });
                 }
 
@@ -107,6 +121,7 @@ namespace CPU7Plus.Emulation {
                         
                         Dispatcher.UIThread.Post(() => {
                             ViewUpdater.UpdateView(_context, _window);
+                            _viewer.UpdateDisplay();
                         });
                     }
                 }

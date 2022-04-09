@@ -41,7 +41,7 @@
                 <MenuItem IsEnabled="False" Header="Runtime Display"/>
             </MenuItem>
             <MenuItem Header="_View" FontSize="12" CornerRadius="0">
-                <MenuItem Header="Memory Viewer"/>
+                <MenuItem Click="OnMemoryViewerButton" Header="Memory Viewer"/>
                 <MenuItem IsEnabled="False" Header="BIN Loader"/>
                 <Separator/>
                 <MenuItem IsEnabled="False" Header="Disassembler"/>
@@ -54,7 +54,7 @@
         
         <Grid Background="#5AFFFFFF">
         
-        <Border BorderThickness="1,0,0,0" BorderBrush="#5A000000"/>
+        <Border BorderThickness="0,0,0,0" BorderBrush="#5A000000"/>
 
         
         <Grid.ColumnDefinitions>
