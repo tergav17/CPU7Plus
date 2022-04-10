@@ -41,7 +41,7 @@ namespace CPU7Plus.Views {
          * Button handler for single stepping
          */
         public void OnStepButton(object sender, RoutedEventArgs e) {
-            _emulationHandler.IssueCommand("STEP");
+            _emulationHandler.IssueCommand("S");
             
             _viewer.UpdateDisplay();
         }

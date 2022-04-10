@@ -38,6 +38,7 @@ namespace CPU7Plus.Emulation {
             
             // Set context
             _viewer.Context = _context;
+            _viewer.Handler = this;
             _viewer.UpdateDisplay();
             
             // Create the thread
@@ -113,12 +114,33 @@ namespace CPU7Plus.Emulation {
                     
                     _commandQueue.TryDequeue(out string? command);
 
-                    if (command != null && command.Equals("STEP")) {
-                        
+                    if (command != null && command.StartsWith("S")) {
+                        // Single step command
                         ViewUpdater.UpdateContext(_context, _window);
 
+                        // Step processor
                         _emulator.Step();
                         
+                        // Update all visuals
+                        Dispatcher.UIThread.Post(() => {
+                            ViewUpdater.UpdateView(_context, _window);
+                            _viewer.UpdateDisplay();
+                        });
+                    } else if (command != null && command.StartsWith("W")) {
+                        // Write memory command
+                        string[] split = command.Split(',');
+
+                        // Read the command and write the byte
+                        try {
+                            _context.Core[Int32.Parse(split[1])] = Convert.ToByte(Int32.Parse(split[2]));
+                        } catch (FormatException) {
+                            // Do nothing lmao
+                        } catch (NullReferenceException) {
+                            // Still nothing, fool!
+                            // (I am good at programming)
+                        }
+                        
+                        // Update all visuals
                         Dispatcher.UIThread.Post(() => {
                             ViewUpdater.UpdateView(_context, _window);
                             _viewer.UpdateDisplay();
