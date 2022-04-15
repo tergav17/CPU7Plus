@@ -42,7 +42,7 @@
             </MenuItem>
             <MenuItem Header="_View" FontSize="12" CornerRadius="0">
                 <MenuItem Click="OnMemoryViewerButton" Header="Memory Viewer"/>
-                <MenuItem IsEnabled="False" Header="BIN Loader"/>
+                <MenuItem Click="OnBinaryLoaderButton" Header="BIN Loader"/>
                 <Separator/>
                 <MenuItem IsEnabled="False" Header="Disassembler"/>
             </MenuItem>
