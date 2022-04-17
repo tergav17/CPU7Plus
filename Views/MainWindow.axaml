@@ -251,6 +251,16 @@
                 
                 <Button Canvas.Left="250" Canvas.Top="30" Width="100" Height="40" BorderThickness="1" BorderBrush="Black" CornerRadius="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas">Select</Button>
                 <Button Canvas.Left="250" Canvas.Top="75" Width="100" Height="40" BorderThickness="1" BorderBrush="Black" CornerRadius="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas">Load/Opsys</Button>
+                
+                <!-- Terminal Control -->
+                
+                <TextBlock FontFamily="Consolas" Canvas.Left="360" Canvas.Top="30" Width="200" TextAlignment="Center">
+                    Control Terminal:
+                </TextBlock>
+                <TextBlock FontFamily="Consolas" Canvas.Left="360" Canvas.Top="50" Width="200" TextAlignment="Center">
+                    Port 50500
+                </TextBlock>
+                
             </Canvas>
         </Grid>
 

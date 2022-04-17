@@ -27,4 +27,8 @@
         <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.13" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.3.4" />
     </ItemGroup>
+    <ItemGroup>
+      <None Remove="Resources\Bootstrap.rom" />
+      <EmbeddedResource Include="Resources\boot.rom" />
+    </ItemGroup>
 </Project>

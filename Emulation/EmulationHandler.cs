@@ -37,7 +37,7 @@ namespace CPU7Plus.Emulation {
             
             // Create terminal handler
             if (TerminalBlock.ConsoleTerminal == null) {
-                _terminalConsole = new TerminalHandler(50500);
+                _terminalConsole = new TerminalHandler(0);
             } else {
                 _terminalConsole = TerminalBlock.ConsoleTerminal;
             }

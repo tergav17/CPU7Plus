@@ -59,6 +59,9 @@ namespace CPU7Plus.Emulation {
             window.FileRow13.Text = ToByteString(context, 0xD0);
             window.FileRow14.Text = ToByteString(context, 0xE0);
             window.FileRow15.Text = ToByteString(context, 0xF0);
+            
+            // Current ISR
+            window.CurrIsr.Text = "Isr: 0x" + context.Fetch8(context.Pc).ToString("X2");
         }
 
         /**

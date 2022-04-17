@@ -59,6 +59,10 @@ namespace CPU7Plus.Emulation {
          * returns an 8 bit memory location
          */
         public byte Fetch8(int addr) {
+
+            // 16-bit-ify
+            addr = addr % 0xFFFF;
+            
             return addr >= 0xF000 ? _adapter.ReadMapped(addr) : _core[addr];
         }
 
@@ -76,7 +80,13 @@ namespace CPU7Plus.Emulation {
          * stores an 8 bit value into memory
          */
         public void Store8(int addr, byte value) {
-            _core[addr] = value;
+            
+            // 16-bit-ify
+            addr = addr % 0xFFFF;
+
+            if (addr >= 0xF000) {
+                _adapter.WriteMapped(addr, value);
+            } else _core[addr] = value;
         }
 
         /*
