@@ -29,8 +29,6 @@ namespace CPU7Plus.Views {
            // Start emulator
            _emulationHandler = new EmulationHandler(this, _viewer, _loader);
 
-           RegWxInput.AddHandler(TextInputEvent, OnTextChange, RoutingStrategies.Tunnel);
-           
         }
 
         /**
@@ -90,13 +88,6 @@ namespace CPU7Plus.Views {
          */
         public void OnMemoryViewerButton(object sender, RoutedEventArgs e) {
             _viewer.Show();
-        }
-        
-        /**
-         * Handles a text change
-         */
-        public void OnTextChange(object? sender, TextInputEventArgs args) {
-            Console.Write("Changed");
         }
 
         /**

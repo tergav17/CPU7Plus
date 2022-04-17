@@ -16,14 +16,27 @@ namespace CPU7Plus.Emulation {
             // Set the memory to 0
             for (int i = 0; i < MemoryLength; i++) _core[i] = 0;
 
+            Reset();
+            
+            // Set up the adapter
+            _adapter = adapter;
+        }
+
+        public void Reset() {
             // Set interrupt level to 0
             Level = 0;
             
             // Set PC to FC00
             Pc = 0xFC00;
             
-            // Set up the adapter
-            _adapter = adapter;
+            // Reset all flags
+            FlagI = false;
+            FlagF = false;
+            FlagL = false;
+            FlagM = false;
+            FlagO = false;
+            FlagC = false;
+            FlagZ = false;
         }
 
         /**
@@ -108,8 +121,18 @@ namespace CPU7Plus.Emulation {
             set => _core = value ?? throw new ArgumentNullException(nameof(value));
         }
 
+        // CPU Status Information
+        
         public ushort Pc { get; set; }
 
         public int Level { get; set; }
+        
+        public bool FlagI { get; set; }
+        public bool FlagF { get; set; }
+        public bool FlagL { get; set; }
+        public bool FlagM { get; set; }
+        public bool FlagO { get; set; }
+        public bool FlagC { get; set; }
+        public bool FlagZ { get; set; }
     }
 }
