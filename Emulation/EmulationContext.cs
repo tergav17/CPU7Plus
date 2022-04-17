@@ -7,8 +7,9 @@ namespace CPU7Plus.Emulation {
         private const int MemoryLength = 262144;
         
         private byte[] _core;
+        private MemoryMappedAdapter _adapter;
 
-        public EmulationContext() {
+        public EmulationContext(MemoryMappedAdapter adapter) {
             // Allocate 256k bytes of memory
             _core = new byte[MemoryLength];
             
@@ -18,8 +19,11 @@ namespace CPU7Plus.Emulation {
             // Set interrupt level to 0
             Level = 0;
             
-            // Set PC to 0
-            Pc = 0;
+            // Set PC to FC00
+            Pc = 0xFC00;
+            
+            // Set up the adapter
+            _adapter = adapter;
         }
 
         /**
@@ -55,7 +59,7 @@ namespace CPU7Plus.Emulation {
          * returns an 8 bit memory location
          */
         public byte Fetch8(int addr) {
-            return _core[addr];
+            return addr >= 0xF000 ? _adapter.ReadMapped(addr) : _core[addr];
         }
 
         /**
@@ -65,7 +69,7 @@ namespace CPU7Plus.Emulation {
             // Resolve alignment issues
             if (align) addr = addr - (addr % 2);
             
-            return Convert.ToUInt16((_core[addr] << 8) | _core[addr + 1]);
+            return Convert.ToUInt16((Fetch8(addr) << 8) | Fetch8(addr + 1));
         }
 
         /*
@@ -82,8 +86,8 @@ namespace CPU7Plus.Emulation {
             // Resolve alignment issues
             if (align) addr = addr - (addr % 2);
             
-            _core[addr] = Convert.ToByte((value >> 8) & 0xFF);
-            _core[addr + 1] = Convert.ToByte(value & 0xFF);
+            Store8(addr, Convert.ToByte((value >> 8) & 0xFF));
+            Store8(addr + 1, Convert.ToByte(value & 0xFF));
         }
 
         /* getters and setters */

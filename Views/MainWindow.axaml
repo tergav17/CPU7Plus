@@ -185,7 +185,7 @@
                 <!-- PC -->
                 
                 <TextBlock FontFamily="Consolas" Canvas.Left="220" Canvas.Top="210"> PC: </TextBlock>
-                <TextBox Name="RegPcInput" FontFamily="Consolas" Canvas.Left = "280" Canvas.Top="207"  MinWidth="0" MinHeight="0" Width="40" Height="24" FontSize="15" MaxLength="4" Padding="2" CornerRadius="0">0000</TextBox>
+                <TextBox Name="RegPcInput" FontFamily="Consolas" Canvas.Left = "280" Canvas.Top="207"  MinWidth="0" MinHeight="0" Width="40" Height="24" FontSize="15" MaxLength="4" Padding="2" CornerRadius="0">FC00</TextBox>
                 
                 <TextBlock Name="CurrIsr" FontFamily="Consolas" Canvas.Left="220" Canvas.Top="240" Width="100" TextAlignment="Center"> Isr: 0x00 </TextBlock>
                 

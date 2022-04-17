@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace CPU7Plus.Emulation {
+namespace CPU7Plus.Terminal {
     public class TerminalHandler {
         
         private volatile bool _run;
@@ -86,9 +86,10 @@ namespace CPU7Plus.Emulation {
                 listener.Bind(localEndPoint);
                 
                 listener.Listen(10);
-            } catch (Exception) {
+            } catch (Exception e) {
                 // Ignored lmao
                 Console.Write("Failed to bind to port " + _port + "!\n");
+                Console.Write(e + "\n");
                 _run = false;
             }
 
@@ -124,15 +125,19 @@ namespace CPU7Plus.Emulation {
 
                     if (numByte == 0) break;
                 }
- 
+
                 clientSocket.Close();
-                
+
+
                 Console.Write("Port " + _port + " disconnected\n");
                 
                 Thread.Sleep(10);
             }
             
-            Console.Write("Stopping terminal thread...");
+            listener.Close();
+            
+            Console.Write("Stopping terminal thread...\n");
+
 
         }
     }

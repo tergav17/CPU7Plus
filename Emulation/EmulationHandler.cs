@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Avalonia.Threading;
+using CPU7Plus.Terminal;
 using CPU7Plus.Views;
 using JetBrains.Annotations;
 
@@ -15,7 +16,8 @@ namespace CPU7Plus.Emulation {
 
         private EmulationCore _emulator;
         private EmulationContext _context;
-        private TerminalHandler _terminal;
+        private TerminalHandler _terminalConsole;
+        private MemoryMappedAdapter _adapter;
 
         private MainWindow _window;
         private MemoryViewer _viewer;
@@ -32,9 +34,17 @@ namespace CPU7Plus.Emulation {
             // Save passed objects
             _window = window;
             _viewer = viewer;
+            
+            // Create terminal handler
+            if (TerminalBlock.ConsoleTerminal == null) {
+                _terminalConsole = new TerminalHandler(50500);
+            } else {
+                _terminalConsole = TerminalBlock.ConsoleTerminal;
+            }
 
             // Create emulator
-            _context = new EmulationContext();
+            _adapter = new MemoryMappedAdapter(_terminalConsole);
+            _context = new EmulationContext(_adapter);
             _emulator = new EmulationCore(_context);
             
             // Set context
@@ -42,10 +52,7 @@ namespace CPU7Plus.Emulation {
             _viewer.Handler = this;
             _viewer.UpdateDisplay();
             loader.Handler = this;
-            
-            // Create terminal handler
-            _terminal = new TerminalHandler(50500);
-            
+
             // Create the thread
             Thread emulationThread = new Thread(new ThreadStart(this.HandleEmulation));
             
@@ -58,7 +65,7 @@ namespace CPU7Plus.Emulation {
          */
         public void Terminate() {
             _run = false;
-            _terminal.Terminate();
+            _terminalConsole.Terminate();
         }
 
         /**
