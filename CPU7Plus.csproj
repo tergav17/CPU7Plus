@@ -34,5 +34,7 @@
       <None Remove="Resources\Ken_Bootstrap_1_unscrabled.rom" />
       <None Remove="Resources\bootstrap_unscrambled.rom" />
       <EmbeddedResource Include="Resources\boot.rom" />
+      <None Remove="Resources\diag.rom" />
+      <EmbeddedResource Include="Resources\diag.rom" />
     </ItemGroup>
 </Project>

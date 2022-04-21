@@ -1,0 +1,131 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="165"
+        x:Class="CPU7Plus.Views.DiagnosticPanel"
+        Icon="/Assets/centurion-logo.ico"
+        CanResize="False"
+        Width="300"
+        Height="165"
+        Title="Diagnostic Panel">
+    
+    
+    <Grid Background="#5AFFFFFF">
+        
+        <Border BorderThickness="0,0,0,0" BorderBrush="#5A000000"/>
+
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="165"/>
+            <RowDefinition Height="165"/>
+        </Grid.RowDefinitions>
+    
+        <Grid Background="LightGray" Grid.Column="0" Grid.Row="0">
+            <Border BorderThickness="1,0,0,0" BorderBrush="#5A000000"/>
+            <Border BorderThickness="0,1,0,0" BorderBrush="#5A000000"/>
+            <Border BorderThickness="0,0,1,0" BorderBrush="#5AFFFFFF"/>
+            <Border BorderThickness="0,0,0,1" BorderBrush="#5AFFFFFF"/>
+                
+            <Canvas>
+            
+                <TextBlock
+                    Name="TopIndicator"
+                    Canvas.Top="15"
+                    Canvas.Left="10"
+                    FontFamily="Consolas"
+                    FontSize="50">
+                     .A.        
+                </TextBlock>
+                
+                <TextBlock
+                    Name="BottomIndicator"
+                    Canvas.Top="85"
+                    Canvas.Left="10"
+                    FontFamily="Consolas"
+                    FontSize="50">
+                    .A.        
+                </TextBlock>
+                
+            </Canvas>
+        </Grid>
+        
+        <Grid Background="LightGray" Grid.Column="1" Grid.Row="0">
+            <Border BorderThickness="1,0,0,0" BorderBrush="#5A000000"/>
+            <Border BorderThickness="0,1,0,0" BorderBrush="#5A000000"/>
+            <Border BorderThickness="0,0,1,0" BorderBrush="#5AFFFFFF"/>
+            <Border BorderThickness="0,0,0,1" BorderBrush="#5AFFFFFF"/>
+                
+            <Canvas>
+            
+                <CheckBox Name="SenseOne" Canvas.Left="15" Canvas.Top="18" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="45" Canvas.Top="26"> SSW 1 </TextBlock>
+                
+                <CheckBox Name="SenseTwo" Canvas.Left="110" Canvas.Top="18" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="140" Canvas.Top="26"> SSW 2 </TextBlock>
+                
+                <CheckBox Name="SenseThree" Canvas.Left="15" Canvas.Top="58" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="45" Canvas.Top="66"> SSW 3 </TextBlock>
+                
+                <CheckBox Name="SenseFour" Canvas.Left="110" Canvas.Top="58" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="140" Canvas.Top="66"> SSW 4 </TextBlock>
+                
+                <TextBlock FontFamily="Consolas" Canvas.Left="15" Canvas.Top="100"> Test #: </TextBlock>
+                <TextBox Name="TestNumber" FontFamily="Consolas" Canvas.Left = "75" Canvas.Top="97"  MinWidth="0" MinHeight="0" Width="40" Height="24" FontSize="15" MaxLength="2" Padding="2" CornerRadius="0" TextAlignment="Center">0D</TextBox>
+
+                <Button
+                    Name="SenseButton"
+                    Canvas.Top="95"
+                    Canvas.Left="155"
+                    Width="30"
+                    Height="30"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    CornerRadius="3"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    FontFamily="Consolas"
+                    FontSize="15">
+                    !
+                </Button>
+                
+                <Button
+                    Click="OnRemove"
+                    Canvas.Top="130"
+                    Canvas.Left="15"
+                    Width="80"
+                    Height="30"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    CornerRadius="3"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    FontFamily="Consolas"
+                    FontSize="15">
+                    Remove
+                </Button>
+                
+                <Button
+                    Click="OnInstall"
+                    Canvas.Top="130"
+                    Canvas.Left="105"
+                    Width="80"
+                    Height="30"
+                    BorderThickness="1"
+                    BorderBrush="Black"
+                    CornerRadius="3"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    FontFamily="Consolas"
+                    FontSize="15">
+                    Install
+                </Button>
+                
+            </Canvas>
+        </Grid>
+    </Grid>
+</Window>

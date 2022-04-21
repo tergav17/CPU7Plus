@@ -12,10 +12,12 @@ namespace CPU7Plus.Terminal {
 
         private int _port;
         private static volatile int _number = 0;
+
+        private volatile bool _escape = false;
         
         // Input / Output queu
-        private ConcurrentQueue<byte> _inputStream;
-        private ConcurrentQueue<byte> _outputStream;
+        private readonly ConcurrentQueue<byte> _inputStream;
+        private readonly ConcurrentQueue<byte> _outputStream;
 
         public TerminalHandler(int port) {
             // Create the thread
@@ -55,7 +57,18 @@ namespace CPU7Plus.Terminal {
          * Write a byte to the terminal
          */
         public void WriteByte(byte b) {
-            _outputStream.Enqueue(b);
+            b = Convert.ToByte(b & 0x7F);
+            
+            if (_escape) {
+              // Handle escape code removal
+              if (b != 28) {
+                  _outputStream.Enqueue(0x1B);
+                  _outputStream.Enqueue(b);
+              }
+              _escape = false;
+            } else if (b == 27) {
+                _escape = true;
+            } else _outputStream.Enqueue(Convert.ToByte(b));
         }
 
         /**
@@ -110,6 +123,7 @@ namespace CPU7Plus.Terminal {
 
                     // Send everything on the output stream
                     if (_outputStream.TryDequeue(out byte oByte)) {
+                        //Console.WriteLine("Sending: " + oByte);
                         clientSocket.Send(new[]{oByte});
                     }
 

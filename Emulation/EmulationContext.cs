@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using CPU7Plus.Views;
 using JetBrains.Annotations;
 
 namespace CPU7Plus.Emulation {
@@ -7,6 +11,9 @@ namespace CPU7Plus.Emulation {
         private const int MemoryLength = 262144;
         
         private byte[] _core;
+        private byte[] _bootRom;
+        private byte[] _diagRom;
+        private volatile bool _diagnosticMode;
         private MemoryMappedAdapter _adapter;
 
         public EmulationContext(MemoryMappedAdapter adapter) {
@@ -20,6 +27,35 @@ namespace CPU7Plus.Emulation {
             
             // Set up the adapter
             _adapter = adapter;
+            
+
+            _diagnosticMode = false;
+            _bootRom = new byte[0x200];
+            _diagRom = new byte[0x8000];
+
+            // Grab the ROM resource
+            byte[] romResource = ExtractResource("boot.rom");
+
+            // Copy what we get into the bootRom
+            for (int i = 0; i < 0x200; i++) {
+                if (i < romResource.Length) {
+                    _bootRom[i] = romResource[i];
+                } else {
+                    _bootRom[i] = 0;
+                }
+            }
+            
+            // Grab the ROM resource
+            romResource = ExtractResource("diag.rom");
+
+            // Copy what we get into the diagRom
+            for (int i = 0; i < 0x8000; i++) {
+                if (i < romResource.Length) {
+                    _diagRom[i] = romResource[i];
+                } else {
+                    _diagRom[i] = 0;
+                }
+            }
         }
 
         public void Reset() {
@@ -37,6 +73,13 @@ namespace CPU7Plus.Emulation {
             FlagO = false;
             FlagC = false;
             FlagZ = false;
+        }
+
+        /**
+         * Returns the state of the sense switches
+         */
+        public bool GetSenseSwitch(int sw) {
+            return _adapter.DiagnosticPanel.GetSsw(sw);
         }
 
         /**
@@ -75,6 +118,16 @@ namespace CPU7Plus.Emulation {
 
             // 16-bit-ify
             addr = addr % 0xFFFF;
+
+            // Diag ROM
+            if (_diagnosticMode && (addr >= 0x8000 && addr < 0xB800) || (addr >= 0xC000 && addr < 0xF000)) {
+                return _diagRom[addr - 0x8000];
+            }
+            
+            // Boot Rom
+            if (addr >= 0xFC00 && addr < 0xFE00) {
+                return _bootRom[addr - 0xFC00];
+            }
             
             return addr >= 0xF000 ? _adapter.ReadMapped(addr) : _core[addr];
         }
@@ -121,12 +174,38 @@ namespace CPU7Plus.Emulation {
             set => _core = value ?? throw new ArgumentNullException(nameof(value));
         }
 
+        private static byte[] ExtractResource(string filename) {
+            Assembly? asm = Assembly.GetEntryAssembly();
+            if (asm == null) {
+                Console.Write("Could not load assembly!\n");
+                return new byte[0];
+            }
+            
+            string resourceName = asm.GetManifestResourceNames().Single(n => n.EndsWith(filename));
+            
+            using (Stream? resFilestream = asm.GetManifestResourceStream(resourceName)) {
+                if (resFilestream == null) {
+                    Console.Write("Could not load resource!\n");
+                    return new byte[0];
+                }
+
+                Console.Write("Loading " + resourceName + "\n");                
+                
+                byte[] ba = new byte[resFilestream.Length];
+                resFilestream.Read(ba, 0, ba.Length);
+                return ba;
+            }
+        }
+
+        public bool DiagnosticMode {
+            get => _diagnosticMode;
+            set => _diagnosticMode = value;
+        }
+
         // CPU Status Information
         
         public ushort Pc { get; set; }
-
         public int Level { get; set; }
-        
         public bool FlagI { get; set; }
         public bool FlagF { get; set; }
         public bool FlagL { get; set; }

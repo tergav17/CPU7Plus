@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -12,6 +13,7 @@ namespace CPU7Plus.Views {
         // Instances
         private EmulationHandler _emulationHandler;
         private MemoryViewer _viewer;
+        private DiagnosticPanel _diagnostic;
         private BinaryLoader _loader;
         
         public MainWindow() {
@@ -26,8 +28,12 @@ namespace CPU7Plus.Views {
                DataContext = new BinaryLoaderViewModel(),
            };
            
+           _diagnostic = new DiagnosticPanel() {
+               DataContext = new DiagnosticPanelViewModel(),
+           };
+           
            // Start emulator
-           _emulationHandler = new EmulationHandler(this, _viewer, _loader);
+           _emulationHandler = new EmulationHandler(this, _viewer, _loader, _diagnostic);
 
         }
 
@@ -45,6 +51,14 @@ namespace CPU7Plus.Views {
             
             _loader.AllowClose();
             _loader.Close();
+            
+            _diagnostic.AllowClose();
+            _diagnostic.Close();
+
+            this.Hide();
+            
+            Thread.Sleep(500);
+            System.Environment.Exit(0);  
         }
 
         /**
@@ -95,6 +109,20 @@ namespace CPU7Plus.Views {
          */
         private void OnBinaryLoaderButton(object? sender, RoutedEventArgs e) {
             _loader.Show();
+        }
+
+        /**
+         * Menu button handler for opening the diagnostic panel
+         */
+        private void OnDiagnosticPanelButton(object? sender, RoutedEventArgs e) {
+            _diagnostic.Show();
+        }
+
+        /**
+         * Restart the processor
+         */
+        private void OnSelect(object? sender, RoutedEventArgs e) {
+            _emulationHandler.IssueCommand(new Command(4));
         }
     }
 }

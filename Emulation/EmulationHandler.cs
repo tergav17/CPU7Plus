@@ -12,7 +12,8 @@ namespace CPU7Plus.Emulation {
         private volatile bool _run;
         private volatile bool _execute;
         private volatile bool _doUpdate;
-
+        private volatile int _speed;
+        private int _cooldown;
 
         private EmulationCore _emulator;
         private EmulationContext _context;
@@ -21,20 +22,24 @@ namespace CPU7Plus.Emulation {
 
         private MainWindow _window;
         private MemoryViewer _viewer;
+        private DiagnosticPanel _diagnostic;
 
         private ConcurrentQueue<Command> _commandQueue;
 
-        public EmulationHandler(MainWindow window, MemoryViewer viewer, BinaryLoader loader) {
+        public EmulationHandler(MainWindow window, MemoryViewer viewer, BinaryLoader loader, DiagnosticPanel diagnostic) {
             // Prepare to create emulation thread
             _run = true;
             _execute = false;
             _doUpdate = true;
+            _speed = 1000;
+            _cooldown = 0;
             _commandQueue = new ConcurrentQueue<Command>();
             
             // Save passed objects
             _window = window;
             _viewer = viewer;
-            
+            _diagnostic = diagnostic;
+
             // Create terminal handler
             if (TerminalBlock.ConsoleTerminal == null) {
                 _terminalConsole = new TerminalHandler(0);
@@ -43,7 +48,7 @@ namespace CPU7Plus.Emulation {
             }
 
             // Create emulator
-            _adapter = new MemoryMappedAdapter(_terminalConsole);
+            _adapter = new MemoryMappedAdapter(_terminalConsole, _diagnostic);
             _context = new EmulationContext(_adapter);
             _emulator = new EmulationCore(_context);
             
@@ -51,6 +56,7 @@ namespace CPU7Plus.Emulation {
             _viewer.Context = _context;
             _viewer.Handler = this;
             _viewer.UpdateDisplay();
+            _diagnostic.Handler = this;
             loader.Handler = this;
 
             // Create the thread
@@ -113,12 +119,15 @@ namespace CPU7Plus.Emulation {
                 }
 
                 if (_execute) {
-                    _emulator.Step();
-                    
-                    Dispatcher.UIThread.Post(() => {
-                        ViewUpdater.UpdateView(_context, _window);
-                        _viewer.UpdateDisplay();
-                    });
+                    for (int i = 0; i < _speed && _execute; i++)if (!_emulator.Step()) _execute = false;
+
+                    if (_cooldown <= 0) {
+                        Dispatcher.UIThread.Post(() => {
+                            ViewUpdater.UpdateView(_context, _window);
+                            _viewer.UpdateDisplay();
+                        });
+                        _cooldown = 5;
+                    } else _cooldown--;
                 }
 
                 // Check to see if any commands have been received
@@ -171,6 +180,8 @@ namespace CPU7Plus.Emulation {
                                 _viewer.UpdateDisplay();
                             });
 
+                        } else if (command.Type == 4) {
+                            Context.Reset();
                         }
                     }
                 }

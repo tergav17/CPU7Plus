@@ -42,7 +42,8 @@
             </MenuItem>
             <MenuItem Header="_View" FontSize="12" CornerRadius="0">
                 <MenuItem Click="OnMemoryViewerButton" Header="Memory Viewer"/>
-                <MenuItem Click="OnBinaryLoaderButton" Header="BIN Loader"/>
+                <MenuItem Click="OnBinaryLoaderButton" Header="Binary Loader"/>
+                <MenuItem Click="OnDiagnosticPanelButton" Header="Diagnostic Panel"/>
                 <Separator/>
                 <MenuItem IsEnabled="False" Header="Disassembler"/>
             </MenuItem>
@@ -249,7 +250,7 @@
                 
                 <!-- Front Panel -->
                 
-                <Button Canvas.Left="250" Canvas.Top="30" Width="100" Height="40" BorderThickness="1" BorderBrush="Black" CornerRadius="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas">Select</Button>
+                <Button Click="OnSelect" Canvas.Left="250" Canvas.Top="30" Width="100" Height="40" BorderThickness="1" BorderBrush="Black" CornerRadius="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas">Select</Button>
                 <Button Canvas.Left="250" Canvas.Top="75" Width="100" Height="40" BorderThickness="1" BorderBrush="Black" CornerRadius="3" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontFamily="Consolas">Load/Opsys</Button>
                 
                 <!-- Terminal Control -->
