@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -122,9 +123,17 @@ namespace CPU7Plus.Terminal {
                 while (_run) {
 
                     // Send everything on the output stream
-                    if (_outputStream.TryDequeue(out byte oByte)) {
+                    if (_outputStream.TryDequeue(out byte initByte)) {
+
+                        List<byte> toSend = new List<byte>();
+                        toSend.Add(initByte);
+                        
+                        while (_outputStream.TryDequeue(out byte oByte)) {
+                            toSend.Add(oByte);
+                        }
+
                         //Console.WriteLine("Sending: " + oByte);
-                        clientSocket.Send(new[]{oByte});
+                        clientSocket.Send(toSend.ToArray());
                     }
 
                     // Poll to see if there is anything that needs to be read
