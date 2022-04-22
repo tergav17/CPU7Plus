@@ -170,7 +170,7 @@
                 <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="120"> M </TextBlock>
                 
                 <CheckBox Name="FlagO" Canvas.Left="280" Canvas.Top="22" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="30"> O </TextBlock>
+                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="30"> V </TextBlock>
                 
                 <CheckBox Name="FlagC" Canvas.Left="280" Canvas.Top="52" CornerRadius="0"></CheckBox>
                 <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="60"> C </TextBlock>

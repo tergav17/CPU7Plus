@@ -87,6 +87,7 @@ namespace CPU7Plus.Emulation {
          */
         public void StopExecution() {
             _execute = false;
+            IssueCommand(new Command(3));
         }
 
         /**
@@ -119,7 +120,11 @@ namespace CPU7Plus.Emulation {
                 }
 
                 if (_execute) {
-                    for (int i = 0; i < _speed && _execute; i++)if (!_emulator.Step()) _execute = false;
+                    for (int i = 0; i < _speed && _execute; i++)
+                        if (!_emulator.Step()) {
+                            _cooldown = 0;
+                            _execute = false;
+                        }
 
                     if (_cooldown <= 0) {
                         Dispatcher.UIThread.Post(() => {
@@ -182,6 +187,11 @@ namespace CPU7Plus.Emulation {
 
                         } else if (command.Type == 4) {
                             Context.Reset();
+                            
+                            Dispatcher.UIThread.Post(() => {
+                                ViewUpdater.UpdateView(_context, _window);
+                                _viewer.UpdateDisplay();
+                            });
                         }
                     }
                 }

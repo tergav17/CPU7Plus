@@ -85,7 +85,7 @@ namespace CPU7Plus.Emulation {
 
             if (addr == 0xF200) {
                 // Read console terminal status
-                return Convert.ToByte(0b01000000 | (_consoleTerminal.HasByte() ? 0x80 : 0x00));
+                return Convert.ToByte(0b00000010 | (_consoleTerminal.HasByte() ? 0x01 : 0x00));
             }
 
             if (addr == 0xF201) {

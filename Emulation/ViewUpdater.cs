@@ -76,7 +76,7 @@ namespace CPU7Plus.Emulation {
             if (window.FlagI.IsChecked != context.FlagI) window.FlagI.IsChecked = context.FlagI;
             if (window.FlagL.IsChecked != context.FlagL) window.FlagL.IsChecked = context.FlagL;
             if (window.FlagM.IsChecked != context.FlagM) window.FlagM.IsChecked = context.FlagM;
-            if (window.FlagO.IsChecked != context.FlagO) window.FlagO.IsChecked = context.FlagO;
+            if (window.FlagO.IsChecked != context.FlagV) window.FlagO.IsChecked = context.FlagV;
             if (window.FlagZ.IsChecked != context.FlagZ) window.FlagZ.IsChecked = context.FlagZ;
 
             // Register File
@@ -297,7 +297,7 @@ namespace CPU7Plus.Emulation {
             if (window.FlagI.IsChecked != null) context.FlagI = (bool) window.FlagI.IsChecked;
             if (window.FlagL.IsChecked != null) context.FlagL = (bool) window.FlagL.IsChecked;
             if (window.FlagM.IsChecked != null) context.FlagM = (bool) window.FlagM.IsChecked;
-            if (window.FlagO.IsChecked != null) context.FlagO = (bool) window.FlagO.IsChecked;
+            if (window.FlagO.IsChecked != null) context.FlagV = (bool) window.FlagO.IsChecked;
             if (window.FlagZ.IsChecked != null) context.FlagZ = (bool) window.FlagZ.IsChecked;
         }
 

@@ -33,8 +33,8 @@ namespace CPU7Plus.Emulation {
 
                 switch (isr & 0x0F) {
                     case 0: // HLT
-                        Context.Pc = ToUShort(pc + 1);
-                        return true;
+                       //Context.Pc = ToUShort(pc + 1);
+                        return false;
                     
                     case 1: // NOP
                         break;
@@ -64,18 +64,23 @@ namespace CPU7Plus.Emulation {
                         break;
                     
                     case 8: // FCA
-                        _context.FlagC = false;
+                        _context.FlagC = true;
                         _context.FlagF = false;
                         _context.FlagI = false;
                         _context.FlagL = false;
                         _context.FlagM = false;
-                        _context.FlagO = false;
+                        _context.FlagV = false;
                         _context.FlagZ = false;
                         break;
                     
                     case 10: // RETI
                     case 9: // RET
+                        _context.FlagL = false;
                         _context.Pc = _context.GetRegister16(2);
+                        
+                        // Pop off the top of stack
+                        _context.SetRegister16(2, Context.Fetch16(Context.GetRegister16(5), false));
+                        _context.SetRegister16(5, ToUShort(_context.GetRegister16(5) + 2));
                         return true;
                     
                     case 14: // DLY
@@ -92,20 +97,19 @@ namespace CPU7Plus.Emulation {
                 int offset = ToSignedOffset(Context.Fetch8(pc + 1));
 
                 bool branch = false;
-                bool less = !_context.FlagZ && !_context.FlagM;
-                bool greater = !_context.FlagZ && _context.FlagM;
+                bool pos = _context.FlagM ^ _context.FlagV;
 
                 switch (isr & 0x0F) {
                     case 0: branch = _context.FlagC; break; // BCS
                     case 1: branch = !_context.FlagC; break; // BCC
-                    case 2: branch = _context.FlagM; break; // BNS
-                    case 3: branch = !_context.FlagM; break; // BNC
+                    case 2: branch = _context.FlagM; break; // BMS
+                    case 3: branch = !_context.FlagM; break; // BMC
                     case 4: branch = _context.FlagZ; break; // BZS
                     case 5: branch = !_context.FlagZ; break; // BZC
-                    case 6: branch = less; break; // BLT
-                    case 7: branch = greater | _context.FlagZ; break; // BGE
-                    case 8: branch = greater; break; // BGT
-                    case 9: branch = less | _context.FlagZ; break; // BLE
+                    case 6: branch = !pos && !_context.FlagZ; break; // BLT
+                    case 7: branch = pos; break; // BLE
+                    case 8: branch = pos && !_context.FlagZ; break; // BGT
+                    case 9: branch = !pos || _context.FlagZ; break; // BGE
                     case 10: branch = Context.GetSenseSwitch(0); break; // BS1
                     case 11: branch = Context.GetSenseSwitch(0); break; // BS2
                     case 12: branch = Context.GetSenseSwitch(0); break; // BS3
@@ -143,7 +147,7 @@ namespace CPU7Plus.Emulation {
                     else outv = inv - 1;
 
                     // Overflow check
-                    Context.FlagO = (outv < 0) || (outv > 255);
+                    Context.FlagV = (outv < 0) || (outv > 255);
                 } else if (op == 2) {
                     // CLR
                     outv = 0;
@@ -151,13 +155,13 @@ namespace CPU7Plus.Emulation {
                     // NOT
                     outv = ~inv;
                 } else if (op == 4) {
-                    // LSL
-                    outv = inv << 1;
-                    Context.FlagC = (inv & 0x80) == 0x80;
-                } else if (op == 5) {
-                    // LSR
+                    // SRL
                     outv = inv >> 1;
                     Context.FlagC = (inv & 0x01) == 0x01;
+                } else if (op == 5) {
+                    // SLL
+                    outv = inv << 1;
+                    Context.FlagC = (inv & 0x80) == 0x80;
                 } else if (op == 6 && !singlet) {
                     // RCC
                     outv = inv >> 1  | (Context.FlagC ? 0x80 : 0);
@@ -201,8 +205,6 @@ namespace CPU7Plus.Emulation {
                     length = 2;
                 }
 
-                // Get inputs, outputs, and operation
-                int inv = Context.GetRegister16(reg);
                 int outv = 0;
                 int op = isr & 0x07;
                 
@@ -217,13 +219,16 @@ namespace CPU7Plus.Emulation {
                     op = 1;
                 }
 
+                // Get inputs, outputs, and operation
+                int inv = Context.GetRegister16(reg);
+                
                 if (op == 0 || op == 1) {
                     // INC / DEC
                     if (op == 0) outv = inv + 1;
                     else outv = inv - 1;
 
                     // Overflow check
-                    Context.FlagO = (outv < 0) || (outv > 65535);
+                    Context.FlagV = (outv < 0) || (outv > 65535);
                 } else if (op == 2) {
                     // CLR
                     outv = 0;
@@ -231,20 +236,20 @@ namespace CPU7Plus.Emulation {
                     // NOT
                     outv = ~inv;
                 } else if (op == 4) {
-                    // LSL
+                    // SRL
+                    outv = inv >> 1;
+                    Context.FlagC = (inv & 0x0001) == 0x0001;
+                } else if (op == 5) {
+                    // SLL
                     outv = inv << 1;
                     Context.FlagC = (inv & 0x8000) == 0x8000;
-                } else if (op == 5) {
-                    // LSR
-                    outv = inv >> 1;
-                    Context.FlagC = (inv & 0x01) == 0x01;
                 } else if (op == 6 && !singlet) {
                     // RCC
                     outv = inv >> 1  | (Context.FlagC ? 0x8000 : 0);
-                    Context.FlagC = (inv & 0x01) == 0x01;
+                    Context.FlagC = (inv & 0x0001) == 0x0001;
                 } else if (op == 7 && !singlet) {
                     // RLC
-                    outv = (inv << 1) | (Context.FlagC ? 0x01 : 0);
+                    outv = (inv << 1) | (Context.FlagC ? 0x0001 : 0);
                     Context.FlagC = (inv & 0x8000) == 0x8000;
                 }
 
@@ -286,13 +291,13 @@ namespace CPU7Plus.Emulation {
                     outv = inDst + inSrc;
 
                     Context.FlagC = (outv > 255);
-                    Context.FlagO = ((ToSignedOffset(ToByte(inDst)) >= 0) == (ToSignedOffset(ToByte(inSrc)) >= 0)) && ((ToSignedOffset(ToByte(inSrc)) >= 0) == (ToSignedOffset(ToByte(outv)) >= 0));
+                    Context.FlagV = ((ToSignedOffset(ToByte(inDst)) >= 0) == (ToSignedOffset(ToByte(inSrc)) >= 0)) && ((ToSignedOffset(ToByte(inSrc)) >= 0) == (ToSignedOffset(ToByte(outv)) >= 0));
                 } else if (op == 1) {
                     // SUB
                     outv = inDst - inSrc;
 
                     Context.FlagC = (outv < 0);
-                    Context.FlagO = ((ToSignedOffset(ToByte(inDst)) >= 0) != (ToSignedOffset(ToByte(inSrc)) >= 0)) && ((ToSignedOffset(ToByte(inSrc)) >= 0) == (ToSignedOffset(ToByte(outv)) >= 0));
+                    Context.FlagV = ((ToSignedOffset(ToByte(inDst)) >= 0) != (ToSignedOffset(ToByte(inSrc)) >= 0)) && ((ToSignedOffset(ToByte(inSrc)) >= 0) == (ToSignedOffset(ToByte(outv)) >= 0));
                 } else if (op == 2) {
                     // AND
                     outv = inDst & inSrc;
@@ -305,6 +310,7 @@ namespace CPU7Plus.Emulation {
                 } else if (op == 5) {
                     // MOV
                     outv = inSrc;
+                    Context.FlagV = true;
                 }
 
                 byte outb = ToByte(outv);
@@ -352,13 +358,13 @@ namespace CPU7Plus.Emulation {
                     outv = inDst + inSrc;
 
                     Context.FlagC = (outv > 65535);
-                    Context.FlagO = ((ToSignedWord(ToUShort(inDst)) >= 0) == (ToSignedWord(ToUShort(inSrc)) >= 0)) && ((ToSignedWord(ToUShort(inSrc)) >= 0) != (ToSignedWord(ToUShort(outv)) >= 0));
+                    Context.FlagV = ((ToSignedWord(ToUShort(inDst)) >= 0) == (ToSignedWord(ToUShort(inSrc)) >= 0)) && ((ToSignedWord(ToUShort(inSrc)) >= 0) != (ToSignedWord(ToUShort(outv)) >= 0));
                 } else if (op == 1) {
                     // SUB
                     outv = inDst - inSrc;
 
                     Context.FlagC = (outv < 0);
-                    Context.FlagO = ((ToSignedWord(ToUShort(inDst)) >= 0) != (ToSignedWord(ToUShort(inSrc)) >= 0)) && ((ToSignedWord(ToUShort(inSrc)) >= 0) == (ToSignedWord(ToUShort(outv)) >= 0));
+                    Context.FlagV = ((ToSignedWord(ToUShort(inDst)) >= 0) != (ToSignedWord(ToUShort(inSrc)) >= 0)) && ((ToSignedWord(ToUShort(inSrc)) >= 0) == (ToSignedWord(ToUShort(outv)) >= 0));
                 } else if (op == 2) {
                     // AND
                     outv = inDst & inSrc;
@@ -370,6 +376,7 @@ namespace CPU7Plus.Emulation {
                         // MOV DX,AX
                         outv = inSrc;
                         regDst = 3;
+                        Context.FlagV = true;
                     } else {
                         // XOR
                         outv = inDst ^ inSrc;
@@ -377,14 +384,17 @@ namespace CPU7Plus.Emulation {
                 } else if (op == 5) {
                     // MOV
                     outv = inSrc;
+                    Context.FlagV = true;
                 } else if (singlet && op == 6) {
                     // MOV EX,AX
                     outv = inSrc;
                     regDst = 4;
+                    Context.FlagV = true;
                 }  else if (singlet && op == 7) {
                     // MOV SP,AX
                     outv = inSrc;
                     regDst = 5;
+                    Context.FlagV = true;
                 }
 
                 ushort outs = ToUShort(outv);
@@ -416,6 +426,7 @@ namespace CPU7Plus.Emulation {
                     
                     // Set additional flags
                     Context.FlagZ = value == 0;
+                    Context.FlagV = true;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
                     
                     
@@ -430,6 +441,7 @@ namespace CPU7Plus.Emulation {
                     
                     // Set additional flags
                     Context.FlagZ = value == 0;
+                    Context.FlagV = true;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
                 }
                 
@@ -449,6 +461,12 @@ namespace CPU7Plus.Emulation {
 
                 // Call instruction
                 if ((isr & 0x08) == 0x08) {
+                    
+                                        
+                    // Push onto the stack
+                    _context.SetRegister16(5, ToUShort(_context.GetRegister16(5) - 2));
+                    _context.Store16(_context.GetRegister16(5), _context.GetRegister16(2), false);
+                    
                     _context.SetRegister16(2, ToUShort(pc + length));
                     _context.FlagL = true;
                 }
@@ -474,6 +492,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                     
                 } else {
                     // LD [REG]
@@ -486,6 +505,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -509,6 +529,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                     
                 } else {
                     // LD [REG]
@@ -521,6 +542,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -544,6 +566,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                     
                 } else {
                     // ST [REG]
@@ -556,6 +579,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -579,6 +603,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                     
                 } else {
                     // ST [REG]
@@ -591,6 +616,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -614,6 +640,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                     
                 } else {
                     // LD [REG]
@@ -626,6 +653,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -649,6 +677,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                     
                 } else {
                     // LD [REG]
@@ -661,6 +690,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -684,6 +714,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                     
                 } else {
                     // ST [REG]
@@ -696,6 +727,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x80) == 0x80; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);
@@ -719,6 +751,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                     
                 } else {
                     // ST [REG]
@@ -731,6 +764,7 @@ namespace CPU7Plus.Emulation {
                     // Set additional flags
                     Context.FlagZ = value == 0;
                     Context.FlagM = (value & 0x8000) == 0x8000; 
+                    Context.FlagV = true;
                 }
                 
                 Context.Pc = ToUShort(pc + length);

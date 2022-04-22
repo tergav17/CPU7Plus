@@ -70,7 +70,7 @@ namespace CPU7Plus.Emulation {
             FlagF = false;
             FlagL = false;
             FlagM = false;
-            FlagO = false;
+            FlagV = false;
             FlagC = false;
             FlagZ = false;
         }
@@ -210,7 +210,7 @@ namespace CPU7Plus.Emulation {
         public bool FlagF { get; set; }
         public bool FlagL { get; set; }
         public bool FlagM { get; set; }
-        public bool FlagO { get; set; }
+        public bool FlagV { get; set; }
         public bool FlagC { get; set; }
         public bool FlagZ { get; set; }
     }
