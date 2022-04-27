@@ -80,7 +80,7 @@ namespace CPU7Plus.Views {
                 buttonDown = SenseButton.IsPressed;
             }, Avalonia.Threading.DispatcherPriority.Normal).Wait();
 
-            output = Convert.ToByte(output | (buttonDown ? 0x80 : 0x00));
+            output = Convert.ToByte(output | (buttonDown ? 0x00 : 0x80));
 
             return output;
         }

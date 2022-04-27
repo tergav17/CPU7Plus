@@ -71,13 +71,11 @@ namespace CPU7Plus.Emulation {
             window.RegPcInput.Text = context.Pc.ToString("X4");
 
             // Update Flags
-            if (window.FlagC.IsChecked != context.FlagC) window.FlagC.IsChecked = context.FlagC;
-            if (window.FlagF.IsChecked != context.FlagF) window.FlagF.IsChecked = context.FlagF;
-            if (window.FlagI.IsChecked != context.FlagI) window.FlagI.IsChecked = context.FlagI;
             if (window.FlagL.IsChecked != context.FlagL) window.FlagL.IsChecked = context.FlagL;
+            if (window.FlagI.IsChecked != context.FlagI) window.FlagI.IsChecked = context.FlagI;
             if (window.FlagM.IsChecked != context.FlagM) window.FlagM.IsChecked = context.FlagM;
-            if (window.FlagO.IsChecked != context.FlagV) window.FlagO.IsChecked = context.FlagV;
-            if (window.FlagZ.IsChecked != context.FlagZ) window.FlagZ.IsChecked = context.FlagZ;
+            if (window.FlagF.IsChecked != context.FlagF) window.FlagF.IsChecked = context.FlagF;
+            if (window.FlagV.IsChecked != context.FlagV) window.FlagV.IsChecked = context.FlagV;
 
             // Register File
             if (!window.FileRow0.Text.Equals((temp = ToByteString(context, 0x00)))) window.FileRow0.Text = temp;
@@ -292,13 +290,11 @@ namespace CPU7Plus.Emulation {
             }
             
             // Flags
-            if (window.FlagC.IsChecked != null) context.FlagC = (bool) window.FlagC.IsChecked;
-            if (window.FlagF.IsChecked != null) context.FlagF = (bool) window.FlagF.IsChecked;
-            if (window.FlagI.IsChecked != null) context.FlagI = (bool) window.FlagI.IsChecked;
             if (window.FlagL.IsChecked != null) context.FlagL = (bool) window.FlagL.IsChecked;
+            if (window.FlagI.IsChecked != null) context.FlagI = (bool) window.FlagI.IsChecked;
             if (window.FlagM.IsChecked != null) context.FlagM = (bool) window.FlagM.IsChecked;
-            if (window.FlagO.IsChecked != null) context.FlagV = (bool) window.FlagO.IsChecked;
-            if (window.FlagZ.IsChecked != null) context.FlagZ = (bool) window.FlagZ.IsChecked;
+            if (window.FlagF.IsChecked != null) context.FlagF = (bool) window.FlagF.IsChecked;
+            if (window.FlagV.IsChecked != null) context.FlagV = (bool) window.FlagV.IsChecked;
         }
 
         /**
@@ -334,13 +330,11 @@ namespace CPU7Plus.Emulation {
             window.LevelInput.IsEnabled = false;
             window.RegPcInput.IsEnabled = false;
 
-            window.FlagC.IsEnabled = false;
-            window.FlagF.IsEnabled = false;
-            window.FlagI.IsEnabled = false;
             window.FlagL.IsEnabled = false;
+            window.FlagI.IsEnabled = false;
             window.FlagM.IsEnabled = false;
-            window.FlagO.IsEnabled = false;
-            window.FlagZ.IsEnabled = false;
+            window.FlagF.IsEnabled = false;
+            window.FlagV.IsEnabled = false;
         }
         
         /**
@@ -376,13 +370,11 @@ namespace CPU7Plus.Emulation {
             window.LevelInput.IsEnabled = true;
             window.RegPcInput.IsEnabled = true;
 
-            window.FlagC.IsEnabled = true;
-            window.FlagF.IsEnabled = true;
-            window.FlagI.IsEnabled = true;
             window.FlagL.IsEnabled = true;
+            window.FlagI.IsEnabled = true;
             window.FlagM.IsEnabled = true;
-            window.FlagO.IsEnabled = true;
-            window.FlagZ.IsEnabled = true;
+            window.FlagF.IsEnabled = true;
+            window.FlagV.IsEnabled = true;
         }
 
         private static string ToByteString(EmulationContext context, int start) {

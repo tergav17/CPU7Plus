@@ -157,26 +157,20 @@
 
                 <!-- Flags -->
                 
-                <CheckBox Name="FlagI" Canvas.Left="220" Canvas.Top="22" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="30"> I </TextBlock>
+                <CheckBox Name="FlagI" Canvas.Left="220" Canvas.Top="112" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="120"> I </TextBlock>
                 
-                <CheckBox Name="FlagF" Canvas.Left="220" Canvas.Top="52" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="60"> F </TextBlock>
+                <CheckBox Name="FlagF" Canvas.Left="220" Canvas.Top="22" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="30"> F </TextBlock>
                 
-                <CheckBox Name="FlagL" Canvas.Left="220" Canvas.Top="82" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="90"> L </TextBlock>
+                <CheckBox Name="FlagL" Canvas.Left="280" Canvas.Top="22" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="30"> L </TextBlock>
                 
-                <CheckBox Name="FlagM" Canvas.Left="220" Canvas.Top="112" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="120"> M </TextBlock>
+                <CheckBox Name="FlagM" Canvas.Left="220" Canvas.Top="52" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="250" Canvas.Top="60"> M </TextBlock>
                 
-                <CheckBox Name="FlagO" Canvas.Left="280" Canvas.Top="22" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="30"> V </TextBlock>
-                
-                <CheckBox Name="FlagC" Canvas.Left="280" Canvas.Top="52" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="60"> C </TextBlock>
-                
-                <CheckBox Name="FlagZ" Canvas.Left="280" Canvas.Top="82" CornerRadius="0"></CheckBox>
-                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="90"> Z </TextBlock>
+                <CheckBox Name="FlagV" Canvas.Left="280" Canvas.Top="52" CornerRadius="0"></CheckBox>
+                <TextBlock FontFamily="Consolas" Canvas.Left="310" Canvas.Top="60"> V </TextBlock>
                 
                 <!-- INT -->
                 

@@ -67,12 +67,10 @@ namespace CPU7Plus.Emulation {
             
             // Reset all flags
             FlagI = false;
+            FlagM = false;
             FlagF = false;
             FlagL = false;
-            FlagM = false;
             FlagV = false;
-            FlagC = false;
-            FlagZ = false;
         }
 
         /**
@@ -207,11 +205,9 @@ namespace CPU7Plus.Emulation {
         public ushort Pc { get; set; }
         public int Level { get; set; }
         public bool FlagI { get; set; }
+        public bool FlagM { get; set; }
         public bool FlagF { get; set; }
         public bool FlagL { get; set; }
-        public bool FlagM { get; set; }
         public bool FlagV { get; set; }
-        public bool FlagC { get; set; }
-        public bool FlagZ { get; set; }
     }
 }
