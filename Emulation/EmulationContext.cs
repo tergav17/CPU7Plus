@@ -71,6 +71,12 @@ namespace CPU7Plus.Emulation {
             FlagF = false;
             FlagL = false;
             FlagV = false;
+            
+            // Reset DMA
+            DmaAddr = 0;
+            DmaCount = 0;
+            DmaMode = 0;
+            DmaEnable = false;
         }
 
         /**
@@ -209,5 +215,12 @@ namespace CPU7Plus.Emulation {
         public bool FlagF { get; set; }
         public bool FlagL { get; set; }
         public bool FlagV { get; set; }
+        
+        // DMA Stuff
+        
+        public ushort DmaAddr { get; set; }
+        public ushort DmaCount { get; set; }
+        public byte DmaMode { get; set; }
+        public bool DmaEnable { get; set; }
     }
 }

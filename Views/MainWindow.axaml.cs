@@ -123,6 +123,10 @@ namespace CPU7Plus.Views {
          */
         private void OnSelect(object? sender, RoutedEventArgs e) {
             _emulationHandler.IssueCommand(new Command(4));
+            
+            _emulationHandler.StartExecution();
+            
+            ViewUpdater.DisableInputs(this);
         }
     }
 }

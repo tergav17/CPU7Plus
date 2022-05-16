@@ -14,8 +14,6 @@ namespace CPU7Plus.Emulation {
 
         private EmulationContext _context;
 
-        private const bool Debug = false;
-        
         public EmulationCore(EmulationContext context) {
             _context = context;
         }
@@ -194,12 +192,17 @@ namespace CPU7Plus.Emulation {
                     // MMU
                 } else if (singlet && op == 7) {
                     // DMA
+
+                    DoDmaOperation(Context.Fetch8(Context.Pc + 1));
+                    length = 2;
+                } else {
+
+                    byte outb = ToByte(outv);
+
+                    // Write register and advance
+                    Context.SetRegister8(reg, outb);
                 }
-
-                byte outb = ToByte(outv);
-
-                // Write register and advance
-                Context.SetRegister8(reg, outb);
+                
                 Context.Pc = ToUShort(pc + length);
             }
             
@@ -371,10 +374,8 @@ namespace CPU7Plus.Emulation {
                 
                 // Set additional flags
                 Context.FlagV = outb == 0;
-                Context.FlagM = (outb & 0x80) == 0x80; 
-                
-                if (Debug) Console.Write("WRITING " + outb + " TO REG " + regDst + '\n');
-                
+                Context.FlagM = (outb & 0x80) == 0x80;
+
                 // Write register and advance
                 Context.SetRegister8(regDst, outb);
                 Context.Pc = ToUShort(pc + length);
@@ -405,8 +406,6 @@ namespace CPU7Plus.Emulation {
                 int outv = 0;
                 int op = isr & 0x07;
                 
-                if (Debug) Console.Write("WORD ALU OP: " + op + " LENGTH: " + length + " SINGLE:" + singlet + "\n");
-
                 if (op == 0) {
                     // ADD
                     outv = inDst + inSrc;
@@ -910,8 +909,6 @@ namespace CPU7Plus.Emulation {
                     break;
             }
 
-            if (Debug) Console.WriteLine("MODE: " + mode + " ADDR: " + ToUShort(address) + " LENGTH: " + length);
-
             return (ToUShort(address), length);
         }
 
@@ -930,19 +927,13 @@ namespace CPU7Plus.Emulation {
                 // Increment mode
                 address = Context.GetRegister16(reg);
                 Context.SetRegister16(reg, ToUShort(address + (single ? 1 : 2)));
-                
-                if (Debug) Console.WriteLine("INDEX INC ON REGISTER " + reg);
             } else if ((imode & 0x03) == 0x02) {
                 // Decrement mode
                 address = Context.GetRegister16(reg) - (single ? 1 : 2);
                 Context.SetRegister16(reg, ToUShort(address));
-                
-                if (Debug) Console.WriteLine("INDEX INC ON REGISTER " + reg);
             } else {
                 // Neutral Mode
                 address = Context.GetRegister16(reg);
-                
-                if (Debug) Console.WriteLine("INDEX NEU ON REGISTER " + reg);
             }
 
             // Check for offset
@@ -956,6 +947,35 @@ namespace CPU7Plus.Emulation {
             }
 
             return ToUShort(address);
+        }
+
+        /**
+         * Does a DMA operation
+         *
+         * Based off of EtchedPixel's implemention
+         */
+        private void DoDmaOperation(byte arg) {
+            int reg = (arg >> 5) & 0x07;
+            int op = arg & 0x0F;
+
+            Console.WriteLine("DMA Operation " + op + " On Reg " + reg);
+            
+            if (op == 0) {
+                Context.DmaAddr = Context.GetRegister16(reg);
+            } else if (op == 1) {
+                Context.SetRegister16(reg, Context.DmaAddr);
+            } else if (op == 2) {
+                Context.DmaCount = Context.GetRegister16(reg);
+            } else if (op == 3) {
+                Context.SetRegister16(reg, Context.DmaCount);
+            } else if (op == 4) {
+                Context.DmaMode = ToByte((arg >> 4) & 0x0F);
+            } else if (op == 6) {
+                Context.DmaEnable = true;
+            } else {
+                //Console.WriteLine("Unknown DMA Operation!");
+            }
+
         }
 
         /**
