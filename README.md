@@ -1,6 +1,6 @@
 # CPU7Plus
 A GUI-based emulator for the Centurion-series minicomputer
 
-Right now this is very much a WIP, the basic framework for the processor register viewer / CPU control buttons are there, but that is about it. The actual CPU emulation is extremely barebones (it can only really execute jump instructions right now).
+Right now this is more or less functional. The basic CPU emulation passed the DIAG test, and has been made to be compatible with the instruction descriptions found in the EE200 reference manual. There is still much work to be done, but it works well enough to use.
 
-The memory editor and viewer are more or less fully functional. Hex information and be types directly into memory, which will update in real time regardless of CPU state. There is also a binary loader which can be used to load binary files directly into memory.
+There are additional tools like the memory loader, memory viewer, and diagnostic panel which also work.
