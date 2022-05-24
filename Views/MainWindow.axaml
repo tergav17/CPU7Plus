@@ -39,6 +39,8 @@
             <MenuItem Header="_Simuation" FontSize="12" CornerRadius="0">
                 <MenuItem IsEnabled="False" Header="Processor Speed"/>
                 <MenuItem IsEnabled="False" Header="Runtime Display"/>
+                <Separator/>
+                <MenuItem Click="OnAdapterReset" Header="Reset I/O"/>
             </MenuItem>
             <MenuItem Header="_View" FontSize="12" CornerRadius="0">
                 <MenuItem Click="OnMemoryViewerButton" Header="Memory Viewer"/>

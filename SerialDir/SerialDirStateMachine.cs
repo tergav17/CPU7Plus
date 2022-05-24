@@ -7,6 +7,9 @@ namespace CPU7Plus.SerialDir {
         
         // CRC polynomial for CRC-8-Bluetooth implementation
         private const int PolyMask = 0b110100111;
+        
+        // File path
+        private const string FilePath = "C:\\Data\\SerialDir\\";
 
         private enum State {
             WaitCommand,
@@ -23,13 +26,29 @@ namespace CPU7Plus.SerialDir {
         private int _bytesToRead;
         private int _bufferIndex;
         private byte[] _buffer;
-        private FileStream? _openFile;
+        private string _fileName;
+        private bool _fileOpen;
+
+        private List<byte> _fileBuffer;
 
         public SerialDirStateMachine() {
+            
+            // Set up file open state 
+            _fileName = "";
+            _fileOpen = false;
+            
+            // Set up some other stuff too
+            _buffer = new byte[0];
+            _fileBuffer = new List<byte>();
+            
+            // Reset
             Reset();
         }
 
         public List<byte> ReceiveByte(byte b) {
+            
+            //Console.WriteLine("Got byte " + b + ", " + _state + ", CRC: " + _crc);
+            
             List<byte> response = new List<byte>();
 
             if (_state == State.WaitCommand) {
@@ -43,9 +62,7 @@ namespace CPU7Plus.SerialDir {
                 
                 if (b == 1) {
                     // [B]ootstrap
-                } else if (b == 2) {
-                    // [O]pen File
-                } else if (b >= 3 && b <= 8) {
+                } else if (b >= 2 && b <= 8) {
                     // [C]lose File
                     _state = State.GetBlockHigh;
                 }
@@ -84,7 +101,7 @@ namespace CPU7Plus.SerialDir {
                 UpdateCyclicCheck(b);
 
                 // Write to buffer
-                _buffer[_bufferIndex] = b;
+                _buffer[_bufferIndex++] = b;
                 _bytesToRead--;
 
                 // If there are no more bytes to read, go on to crc check
@@ -93,7 +110,179 @@ namespace CPU7Plus.SerialDir {
             
             else if (_state == State.ReadCheck) {
                 // Check and see if there is an error
-                bool error = b != _crc;
+                if (b != _crc) {
+                    Console.WriteLine("CRC Failure, Got: " + b + " expected " + _crc);
+                    
+                    // Error condition
+                    ResetCyclicCheck();
+
+                    AddAndCheck(response, 0xFF);
+                    AddAndCheck(response, Convert.ToByte(_crc));
+                } else {
+                    
+                    ResetCyclicCheck();
+                    
+                    if (_command == 2) {
+                        // [O]pen
+                        string fname = ExtractFilename();
+                        bool hasOpened = false;
+                        
+                        CloseFile();
+                        Console.WriteLine("Opening file " + fname);
+                        
+                     
+                        if (OpenFile(Path.Combine(FilePath, fname))) {
+                            hasOpened = true;
+                        } else {
+                            Console.WriteLine("Cannot open file " + fname);
+                        }
+
+                        // Return condition
+                        AddAndCheck(response, Convert.ToByte(hasOpened ? 0x00 : 0xFE));
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 3) {
+                        // [C]lose
+                        Console.WriteLine("Closing file");
+                        
+                        CloseFile();
+                        
+                        // Return condition
+                        AddAndCheck(response, 0x00);
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 4) {
+                        // [M]ake
+                        string fname = ExtractFilename();
+                        bool hasOpened = false;
+                        
+                        Console.WriteLine("Making file " + fname);
+                        
+                        try {
+                            File.Create(Path.Combine(FilePath, fname));
+                            hasOpened = true;
+                        } catch (Exception) {
+                            Console.WriteLine("Cannot make file " + fname);
+                        }
+
+                        // Return condition
+                        AddAndCheck(response, Convert.ToByte(hasOpened ? 0x00 : 0xFE));
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 5) {
+                        // [D]elete
+                        string fname = ExtractFilename();
+                        bool hasDeleted = false;
+                        
+                        Console.WriteLine("Deleting file " + fname);
+
+                        try {
+                            File.Delete(Path.Combine(FilePath, fname));
+                            hasDeleted = true;
+                        } catch (Exception) {
+                            Console.WriteLine("Cannot delete file " + fname);
+                        }
+                        
+                        // Return condition
+                        AddAndCheck(response, Convert.ToByte(hasDeleted ? 0x00 : 0xFE));
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 6) {
+                        // [L]ist
+                        string[] files;
+                        try {
+                            files= Directory.GetFiles(FilePath);
+                        } catch (Exception) {
+                            files = new string[0];
+                        }
+
+                        String file = "";
+                        if (_block < files.Length) {
+                            file = Path.GetFileName(files[_block]).ToUpper();
+                        }
+
+                        Console.WriteLine("Listing file #" + _block + ": " + file);
+                        
+                        AddAndCheck(response, 1);
+                        
+                        // Send file name
+                        for (int i = 0; i < 13; i++) {
+                            char c = '\0';
+
+                            char[] filename = file.ToCharArray();
+
+                            if (i < filename.Length) c = filename[i];
+                            
+                            AddAndCheck(response, Convert.ToByte(c));
+                        }
+                        
+                        AddAndCheck(response, 0x00);
+
+                        // Get file stats
+                        try {
+                            FileInfo info = new FileInfo(Path.Combine(FilePath, file));
+
+                            int len;
+                            if (info.Length > 16777215) {
+                                len = 65535;
+                            } else {
+                                len = Convert.ToInt32(info.Length / 256);
+                            }
+                            
+                            AddAndCheck(response, Convert.ToByte(len >> 8));
+                            AddAndCheck(response,Convert.ToByte(len & 0xFF));
+                        } catch (Exception) {
+                            Console.WriteLine("Cannot stat file!");
+                            AddAndCheck(response,0x00);
+                            AddAndCheck(response,0x00);
+                        }
+                        // Send CRC
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 7) {
+                        // [R]ead Command
+                        if (_fileOpen && _fileBuffer.Count / 256 > _block) {
+                            // Indicate return of 256 bytes
+                            AddAndCheck(response, 2);
+                            
+                            Console.WriteLine("Read Block " + _block);
+                            
+                            // Return those 256 bytes
+                            for (int i = 0; i < 256; i++) {
+                                AddAndCheck(response, _fileBuffer[i + (256 * _block)]);
+                            }
+
+                        } else {
+                            // Return error
+                            AddAndCheck(response, 0xFE);
+                            
+                            Console.WriteLine("Read Failure");
+                        }
+                        
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    } else if (_command == 8) {
+                        // [W]rite
+
+                        if (_fileOpen) {
+                            // Indicate return of 0 bytes
+                            AddAndCheck(response, 0x00);
+                            
+                            Console.WriteLine("Writing Block " + _block);
+
+                            for (int i = 0; i < 256; i++) {
+                                int addr = (_block * 256) + i;
+
+                                // Pad zeros if address is too big
+                                while (addr >= _fileBuffer.Count) _fileBuffer.Add(0x00);
+
+                                _fileBuffer[addr] = _buffer[i];
+                            }
+                        } else {
+                            // Return error
+                            AddAndCheck(response, 0xFE);
+                            
+                            Console.WriteLine("Write Failure");
+                        }
+                        
+                        AddAndCheck(response, Convert.ToByte(_crc));
+                    }
+
+                }
 
                 // Go back to waiting for a command
                 _state = State.WaitCommand;
@@ -101,23 +290,68 @@ namespace CPU7Plus.SerialDir {
 
             return response;
         }
-        
+
+        /**
+         * Closes a file, and writes the buffer back into the file
+         */
+        private void CloseFile() {
+            if (_fileOpen) {
+                _fileOpen = false;
+                try {
+                    BinaryWriter writer = new BinaryWriter(File.OpenWrite(_fileName));
+                    writer.Write(_fileBuffer.ToArray());
+                    writer.Close();
+                } catch (Exception) {
+                    Console.WriteLine("Failed to write back file!");
+                }
+            }
+            _fileName = "";
+
+
+        }
+
+        /**
+         * Opens and buffers a file for use
+         */
+        private bool OpenFile(string fname) {
+            CloseFile();
+
+            try {
+                byte[] bytes = File.ReadAllBytes(Path.Combine(FilePath, fname));
+
+                // Buffer the file
+                _fileBuffer = new List<byte>();
+                foreach (byte b in bytes) {
+                    _fileBuffer.Add(b);
+                }
+                
+                // Pad with zeros
+                while (_fileBuffer.Count % 256 != 0) _fileBuffer.Add(0x00);
+            } catch (Exception) {
+                return false;
+            }
+            
+            _fileName = fname;
+            _fileOpen = true;
+
+            return true;
+        }
+
         /**
          * Reset the state machine to the command state
          */
         public void Reset() {
             _state = State.WaitCommand;
             
-            _openFile?.Close();
-            _openFile = null;
-            
             _command = 0;
             _block = 0;
             _bytesToRead = 0;
             _bufferIndex = 0;
             _buffer = new byte[256];
+
+            _fileBuffer = new List<byte>();
             
-            
+            CloseFile();
             ResetCyclicCheck();
         }
 
@@ -127,7 +361,29 @@ namespace CPU7Plus.SerialDir {
         private void ResetCyclicCheck() {
             _crc = 251;
         }
-        
+
+
+        /**
+         * Extracts a filename from the buffer
+         */
+        public string ExtractFilename() {
+            String name = "";
+
+            for (int i = 0; i < 13 && _buffer[i] != 0; i++) {
+                name = name + System.Text.Encoding.ASCII.GetString(new[]{_buffer[i]});
+            }
+
+            return name.ToUpper();
+        }
+
+        /**
+         * Adds to a list, and updates the CRC
+         */
+        public void AddAndCheck(List<byte> l, byte b) {
+            l.Add(b);
+            UpdateCyclicCheck(b);
+        }
+
         /**
          * Generates a CRC value based on an incoming message
          * Lowest index is assumed to be the first byte received
@@ -136,7 +392,7 @@ namespace CPU7Plus.SerialDir {
 
             // Create a copy of this byte for usage
             int by = b;
-            
+
             for (int i = 0; i < 8; i++) {
                 // Get the highest bit the the byte
                 int last = by & 0x80;

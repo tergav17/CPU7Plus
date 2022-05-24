@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Avalonia.Threading;
+using CPU7Plus.SerialDir;
 using CPU7Plus.Terminal;
 using CPU7Plus.Views;
 using JetBrains.Annotations;
@@ -74,6 +75,13 @@ namespace CPU7Plus.Emulation {
             _terminalConsole.Terminate();
         }
 
+        /**
+         * Resets the memory mapped adapter
+         */
+        public void ResetMemoryMappedAdapter() {
+            _adapter.Reset();
+        }
+        
         /**
          * Start processor execution
          */

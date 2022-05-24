@@ -128,5 +128,12 @@ namespace CPU7Plus.Views {
             
             ViewUpdater.DisableInputs(this);
         }
+
+        /**
+         * Resets the I/O adapter
+         */
+        private void OnAdapterReset(object? sender, RoutedEventArgs e) {
+            _emulationHandler.ResetMemoryMappedAdapter();
+        }
     }
 }

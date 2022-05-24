@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using CPU7Plus.SerialDir;
 using CPU7Plus.Terminal;
 using CPU7Plus.Views;
 using JetBrains.Annotations;
@@ -11,12 +13,22 @@ namespace CPU7Plus.Emulation {
         
         private TerminalHandler _consoleTerminal;
         private DiagnosticPanel _diagnostic;
+        private SerialDirStateMachine _serialDir;
+
+        private List<byte> _serialDirResponse;
         
         public MemoryMappedAdapter(TerminalHandler consoleTerminal, DiagnosticPanel diagnostic) {
             _consoleTerminal = consoleTerminal;
             _diagnostic = diagnostic;
+            _serialDir = new SerialDirStateMachine();
+            _serialDirResponse = new List<byte>();
         }
-        
+
+        public void Reset() {
+            _serialDir.Reset();
+            _serialDirResponse = new List<byte>();
+        }
+
 
 
         /**
@@ -69,6 +81,11 @@ namespace CPU7Plus.Emulation {
             } else if (addr == 0xF201) {
                 // Console terminal write
                 _consoleTerminal.WriteByte(b);
+            } else if (addr == 0xF207) {
+                // SerialDir command register
+                List<byte> response = _serialDir.ReceiveByte(b);
+
+                foreach (byte by in response) _serialDirResponse.Add(by);
             }
 
         }
@@ -91,6 +108,22 @@ namespace CPU7Plus.Emulation {
             if (addr == 0xF201) {
                 // Console terminal read
                 return _consoleTerminal.ReadByte();
+            }
+            
+            if (addr == 0xF206) {
+                // Read SerialDir status
+                return Convert.ToByte(0b00000010 | (_serialDirResponse.Count > 0 ? 0x01 : 0x00));
+            }
+
+            if (addr == 0xF207) {
+                // SerialDir response read
+                if (_serialDirResponse.Count > 0) {
+                    byte ret = _serialDirResponse[0];
+                    _serialDirResponse.RemoveAt(0);
+                    return ret;
+                } else {
+                    return 0;
+                }
             }
 
             return 0;
