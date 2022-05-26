@@ -47,7 +47,7 @@ namespace CPU7Plus.SerialDir {
 
         public List<byte> ReceiveByte(byte b) {
             
-            //Console.WriteLine("Got byte " + b + ", " + _state + ", CRC: " + _crc);
+            Console.WriteLine("Got byte " + b + ", " + _state + ", CRC: " + _crc);
             
             List<byte> response = new List<byte>();
 
@@ -62,6 +62,19 @@ namespace CPU7Plus.SerialDir {
                 
                 if (b == 1) {
                     // [B]ootstrap
+                    byte[] bootloader = new byte[256];
+                    for (int i = 0; i < 256; i++) bootloader[i] = 0;
+
+                    try {
+                        byte[] bytes = File.ReadAllBytes(Path.Combine(FilePath, "BOOT.BIN"));
+
+                        for (int i = 0; i < 256; i++) if (i < bytes.Length) bootloader[i] = bytes[i];
+                    } catch (Exception) {
+                        Console.WriteLine("Cannot load bootstrap!");
+                    }
+
+                    foreach (byte by in bootloader) response.Add(by);
+
                 } else if (b >= 2 && b <= 8) {
                     // [C]lose File
                     _state = State.GetBlockHigh;
