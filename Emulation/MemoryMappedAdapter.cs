@@ -81,7 +81,7 @@ namespace CPU7Plus.Emulation {
             } else if (addr == 0xF201) {
                 // Console terminal write
                 _consoleTerminal.WriteByte(b);
-            } else if (addr == 0xF203) {
+            } else if (addr == 0xF207) {
                 // SerialDir command register
                 List<byte> response = _serialDir.ReceiveByte(b);
 
@@ -110,12 +110,12 @@ namespace CPU7Plus.Emulation {
                 return _consoleTerminal.ReadByte();
             }
             
-            if (addr == 0xF202) {
+            if (addr == 0xF206) {
                 // Read SerialDir status
                 return Convert.ToByte(0b00000010 | (_serialDirResponse.Count > 0 ? 0x01 : 0x00));
             }
 
-            if (addr == 0xF203) {
+            if (addr == 0xF207) {
                 // SerialDir response read
                 if (_serialDirResponse.Count > 0) {
                     byte ret = _serialDirResponse[0];
