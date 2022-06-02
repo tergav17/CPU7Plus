@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -46,9 +47,7 @@ namespace CPU7Plus.SerialDir {
         }
 
         public List<byte> ReceiveByte(byte b) {
-            
-            Console.WriteLine("Got byte " + b + ", " + _state + ", CRC: " + _crc);
-            
+
             List<byte> response = new List<byte>();
 
             if (_state == State.WaitCommand) {
@@ -69,6 +68,8 @@ namespace CPU7Plus.SerialDir {
                         byte[] bytes = File.ReadAllBytes(Path.Combine(FilePath, "BOOT.BIN"));
 
                         for (int i = 0; i < 256; i++) if (i < bytes.Length) bootloader[i] = bytes[i];
+                        
+                        Console.Write("B");
                     } catch (Exception) {
                         Console.WriteLine("Cannot load bootstrap!");
                     }
@@ -76,7 +77,6 @@ namespace CPU7Plus.SerialDir {
                     foreach (byte by in bootloader) response.Add(by);
 
                 } else if (b >= 2 && b <= 8) {
-                    // [C]lose File
                     _state = State.GetBlockHigh;
                 }
             } 
@@ -141,13 +141,13 @@ namespace CPU7Plus.SerialDir {
                         bool hasOpened = false;
                         
                         CloseFile();
-                        Console.WriteLine("Opening file " + fname);
-                        
-                     
-                        if (OpenFile(Path.Combine(FilePath, fname))) {
+
+
+                        if (OpenFile(fname)) { 
                             hasOpened = true;
+                            Console.Write("O");
                         } else {
-                            Console.WriteLine("Cannot open file " + fname);
+                            Console.Write("X");
                         }
 
                         // Return condition
@@ -155,7 +155,7 @@ namespace CPU7Plus.SerialDir {
                         AddAndCheck(response, Convert.ToByte(_crc));
                     } else if (_command == 3) {
                         // [C]lose
-                        Console.WriteLine("Closing file");
+                        Console.Write("C");
                         
                         CloseFile();
                         
@@ -165,32 +165,30 @@ namespace CPU7Plus.SerialDir {
                     } else if (_command == 4) {
                         // [M]ake
                         string fname = ExtractFilename();
-                        bool hasOpened = false;
-                        
-                        Console.WriteLine("Making file " + fname);
-                        
+                        bool hasMade = false;
+
                         try {
-                            File.Create(Path.Combine(FilePath, fname));
-                            hasOpened = true;
+                            File.Create(Path.Combine(FilePath, fname)).Close();
+                            hasMade = true;
+                            Console.Write("M");
                         } catch (Exception) {
-                            Console.WriteLine("Cannot make file " + fname);
+                            Console.Write("?");
                         }
 
                         // Return condition
-                        AddAndCheck(response, Convert.ToByte(hasOpened ? 0x00 : 0xFE));
+                        AddAndCheck(response, Convert.ToByte(hasMade ? 0x00 : 0xFE));
                         AddAndCheck(response, Convert.ToByte(_crc));
                     } else if (_command == 5) {
                         // [D]elete
                         string fname = ExtractFilename();
                         bool hasDeleted = false;
-                        
-                        Console.WriteLine("Deleting file " + fname);
 
                         try {
                             File.Delete(Path.Combine(FilePath, fname));
                             hasDeleted = true;
+                            Console.Write("D");
                         } catch (Exception) {
-                            Console.WriteLine("Cannot delete file " + fname);
+                            Console.Write("?");
                         }
                         
                         // Return condition
@@ -205,12 +203,13 @@ namespace CPU7Plus.SerialDir {
                             files = new string[0];
                         }
 
-                        String file = "";
+                        string? file = "";
                         if (_block < files.Length) {
-                            file = Path.GetFileName(files[_block]).ToUpper();
+                            file = Path.GetFileName(files[_block])?.ToUpper();
+                            file ??= "";
                         }
 
-                        Console.WriteLine("Listing file #" + _block + ": " + file);
+                        Console.Write("L");
                         
                         AddAndCheck(response, 1);
                         
@@ -233,15 +232,14 @@ namespace CPU7Plus.SerialDir {
 
                             int len;
                             if (info.Length > 16777215) {
-                                len = 65535;
+                                len = 0;
                             } else {
-                                len = Convert.ToInt32(info.Length / 256);
+                                len = Convert.ToInt32((info.Length / 256) + ((info.Length % 256 > 0) ? 1 : 0));
                             }
                             
-                            AddAndCheck(response, Convert.ToByte(len >> 8));
+                            AddAndCheck(response, Convert.ToByte((len >> 8) & 0xFF));
                             AddAndCheck(response,Convert.ToByte(len & 0xFF));
                         } catch (Exception) {
-                            Console.WriteLine("Cannot stat file!");
                             AddAndCheck(response,0x00);
                             AddAndCheck(response,0x00);
                         }
@@ -253,7 +251,7 @@ namespace CPU7Plus.SerialDir {
                             // Indicate return of 256 bytes
                             AddAndCheck(response, 2);
                             
-                            Console.WriteLine("Read Block " + _block);
+                            Console.Write(".");
                             
                             // Return those 256 bytes
                             for (int i = 0; i < 256; i++) {
@@ -263,8 +261,7 @@ namespace CPU7Plus.SerialDir {
                         } else {
                             // Return error
                             AddAndCheck(response, 0xFE);
-                            
-                            Console.WriteLine("Read Failure");
+                            Console.Write("E");
                         }
                         
                         AddAndCheck(response, Convert.ToByte(_crc));
@@ -275,7 +272,7 @@ namespace CPU7Plus.SerialDir {
                             // Indicate return of 0 bytes
                             AddAndCheck(response, 0x00);
                             
-                            Console.WriteLine("Writing Block " + _block);
+                            Console.Write("'");
 
                             for (int i = 0; i < 256; i++) {
                                 int addr = (_block * 256) + i;
@@ -289,7 +286,7 @@ namespace CPU7Plus.SerialDir {
                             // Return error
                             AddAndCheck(response, 0xFE);
                             
-                            Console.WriteLine("Write Failure");
+                            Console.Write("E");
                         }
                         
                         AddAndCheck(response, Convert.ToByte(_crc));
@@ -311,7 +308,7 @@ namespace CPU7Plus.SerialDir {
             if (_fileOpen) {
                 _fileOpen = false;
                 try {
-                    BinaryWriter writer = new BinaryWriter(File.OpenWrite(_fileName));
+                    BinaryWriter writer = new BinaryWriter(File.OpenWrite(Path.Combine(FilePath, _fileName)));
                     writer.Write(_fileBuffer.ToArray());
                     writer.Close();
                 } catch (Exception) {
@@ -340,7 +337,8 @@ namespace CPU7Plus.SerialDir {
                 
                 // Pad with zeros
                 while (_fileBuffer.Count % 256 != 0) _fileBuffer.Add(0x00);
-            } catch (Exception) {
+            } catch (Exception e) {
+                Console.WriteLine(e.Message);
                 return false;
             }
             
